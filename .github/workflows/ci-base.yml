@@ -1,0 +1,32 @@
+name: ci-main-base
+
+on:
+  push:
+    tags:
+      - 'v2-*.*.*'
+      - 'gcp-dev'
+    branches:
+      - 'feature/**'
+      - 'bugfix/**'
+      - 'hotfix/**'
+      - 'release/**'
+      - 'main'
+ 
+permissions: 
+  contents: write
+  pull-requests: write
+  id-token: write
+  checks: write
+  statuses: write
+
+jobs:
+    build:
+        uses: inkaviation/ink-shared-workflows/.github/workflows/main.yml@v1
+        secrets: 
+          github-token: ${{ secrets.ACCESS_TOKEN }}
+          vault-token: ${{ secrets.VAULT_TOKEN }}
+          app_id: ${{ secrets.GH_APP_ID }}
+          private_key: ${{ secrets.GH_APP_PKEY }}
+          private_key2: ${{ secrets.GH_APP_PKEY2 }}
+          gcp_cicd_sa: ${{ secrets.GCP_CICD_SA }}
+          slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}

@@ -1,0 +1,21 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: datastreamspubsub-qa
+spec:
+  type: pubsub.snssqs
+  version: v1
+  metadata:
+    - name: endpoint
+      value: http://localhost:4566
+    # Use us-east-1 for localstack
+    - name: awsRegion
+      value: us-east-1
+    - name: sqsDeadLettersQueueName
+      value: 'datastreamspubsub-dl'
+    - name: messageReceiveLimit
+      value: 2
+    - name: messageRetryLimit
+      value: 2
+    - name: consumerID
+      value: 'datastreamspubsub'

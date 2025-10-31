@@ -1,0 +1,9 @@
+version: 1
+apps:
+  - appID: rate-limit-poc
+    resourcesPaths:
+      - ../rate-limit-poc/components
+    appPort: 3001
+    grpcPort: 50001
+    appDirPath: ../rate-limit-poc
+    command: ['yarn', 'dev']

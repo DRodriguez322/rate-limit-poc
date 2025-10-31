@@ -1,0 +1,35 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: datastreamspubsub
+  namespace: default
+spec:
+  type: pubsub.gcp.pubsub
+  version: v1
+  metadata:
+    - name: type
+      value: service_account
+    - name: projectId
+      value: 'gcp-poc-426221' # replace
+    - name: identityProjectId
+      value: 'gcp-poc-426221' # replace
+    - name: privateKeyId
+      value: '51a4833485b48d65a05c6ae4daf6572aee2b7edd' #replace
+    - name: clientEmail
+      value: 'test-account@gcp-poc-426221.iam.gserviceaccount.com' #replace
+    - name: clientId
+      value: '117637727534651198672' # replace
+    - name: authUri
+      value: https://accounts.google.com/o/oauth2/auth
+    - name: tokenUri
+      value: https://oauth2.googleapis.com/token
+    - name: authProviderX509CertUrl
+      value: https://www.googleapis.com/oauth2/v1/certs
+    - name: clientX509CertUrl
+      value: https://www.googleapis.com/robot/v1/metadata/x509/test-account%40gcp-poc-426221.iam.gserviceaccount.com #replace PROJECT_NAME
+    - name: privateKey
+      value: "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDWX/vV4Wl4cM2x\nuIuzQYXT5dx6rEpcl41crvEtj6xVCwO4vU323XLzlRKipqVaNdWADgvFy/Of5vbw\nwjh/J7AfGP1QbK2Jj9EIqNg/QvbdOsiJLK11Sjec5tpmWHj/u3qTZKwdL5Bf0Sxh\nfQUanEtjctYXDnDQRGUI+tqsGSv+a1RpjKGwxT1DpCR5ZvLJSwBmM7nMpN2zR2Vw\nvRKT3+4RtGOg4TVjgfG6tyvXksKNtKzKNuxcy0ZIUpCGvqX4zouj2sti3ay4cM5V\nyWy1q/cMk0xqCeBwErCRDa0zfhr9+/wOyJmuPsM3xyJNlRwV/YHvsJHswcLQmdsG\n/u0L2YfjAgMBAAECggEAMtIZYShpeQiA8vdVgv7vC39sJ9bNYCr7c7PzcAIl8BlG\n3hZes73m4PD/tHh+LacigJOT3eXOUSOPeh8JBrfxbEXf05+X+ksSWpOwhDrLTEIB\nxWdGjc405ejicK3brYCT+/o7RUX/2386nrflLFxOEPrp3xhozS7RpvHVQkRLZio7\nhOaTPnZnxyy1MC6CE3dvcg2/J7wL2cLmgeaARbMcHZ/Eam+Ojz+2+yjlLhugVeEZ\nQ5WIaVrl85oF9s6yl1BipV3Z06v5XD3YnIVwy9qlWT0+qRjH616n4sUBjGhnbiKG\nmPYdtQk6Hu8Ep6p8eZkO0jXnKOXGSlbRRjRz5CIKYQKBgQDvVAP2tUDIwUMDY7ik\nQ/sQ0Jr5fTQYbAd8R9bGpYet+n7QP9Wn9w/Ae+oQi2KNxOKCHY3+T9u4CTi3ZYzG\n6bxa9rOJHRbr+4eq6J2fZX1btFMIADFbLl1Q3sologQix1+QqT/sCKlEpeUWY7qv\ni4OyxTRaT2J/NCLhTKkZ6CsYwwKBgQDlTvjmnQJc1pp/T+Z5Q2tSmMgpSaU5i6ax\nIcPIMQWtYYQGCp0fGDnWC53NiGZPeCpgLnrXxmhe38nM21pdtBNNks5gghH4qqq5\nhUbNmMHk8U6x3eFNfJbHiaYiBRlAFjeh0kn6s1XbPFayQd9uRyQDXJjqJl2fG6By\nctpVdyPiYQKBgQCHvMzqte5ibkpFt99XOz9AUDA1ZG+RkmPEdzI3RFbps/MMxce2\nFggXEbC1ZXimE46sYXrRTBXAEWrbiXsIrjSoGtfE4nzHpsdRhdEwQG2S/3lARmu3\n3VoLrfBU28kguJdZAsVAZ8EpMDX4NuQBAE3XrMV+mxuwLa/CvKoECYu35QKBgQDO\nI39HuU/da6K53nce/gel2ejejPD2WV+Bjwv0lHU5FxfbYoE66clcbVbv5LWsrSbT\nDhWqkhdTarR775k98VsE+nuCcIt9UtdlLbWnr7JmgLMw3Hjk8qKNQGXT4WeAoDhk\nxalxsPP2wThiySr1dQif6QciP1kcZnaHTE6QVCkzIQKBgQC0NMr+Bo/jJl5Y1hcy\nThMRvd5UOFuSkaGt6sWBGaUYnlxOw1frjKZKiC7ykadrmxsTDQlqFIAmS4obpqKx\nncZsqaqz9b4cgRAumPjkS4hgYQpJzF12PlobBHo1KxuvLPAYNFRtXRYSpMuFeKN5\nvHVYZWmMyC6KxDUfWcXyoMtgvQ==\n-----END PRIVATE KEY-----\n"
+    - name: deadLetterTopic # Optional
+      value: 'datastreamspubsub-dl'
+    - name: maxDeliveryAttempts # Optional
+      value: 5
