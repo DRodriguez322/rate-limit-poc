@@ -1,23 +1,27 @@
-import 'reflect-metadata';
-import dotenv from 'dotenv';
+import "reflect-metadata";
+import dotenv from "dotenv";
 
 dotenv.config();
 
-import { GetApiServiceImpl } from './features/get-api/application/get-api-service-impl';
-import { GetPocApi } from './features/get-api/infrastructure/api/v1/get-poc-api';
-import { GetApiRepositoryPrisma } from './features/get-api/infrastructure/get-api-repository-prisma';
-import { type Express } from 'express';
+import { GetApiServiceImpl } from "./features/get-api/application/get-api-service-impl";
+import { GetPocApi } from "./features/get-api/infrastructure/api/v1/get-poc-api";
+import { GetApiRepositoryPrisma } from "./features/get-api/infrastructure/get-api-repository-prisma";
+import { type Express } from "express";
 import {
   logError,
   registerAllCommonDependenciesAndComponents,
   startDaprServer,
-} from 'ms_nodejs_common';
-import { container } from 'tsyringe';
-import { GetApiRepositoryContract } from './features/get-api/domain/contracts/data-streamer-repository';
-import { GetApiServiceContract } from './features/get-api/domain/contracts/data-streamer-service';
-import { Connection, initializeRedisConnection, REDIS_CONNECTION_INJECTION_TOKEN } from './features/get-api/infrastructure/redis-connection-factory';
+} from "ms_nodejs_common";
+import { container } from "tsyringe";
+import { GetApiRepositoryContract } from "./features/get-api/domain/contracts/data-streamer-repository";
+import { GetApiServiceContract } from "./features/get-api/domain/contracts/data-streamer-service";
+import {
+  Connection,
+  initializeRedisConnection,
+  REDIS_CONNECTION_INJECTION_TOKEN,
+} from "./features/get-api/infrastructure/redis-connection-factory";
 
-export const MICROSERVICE_NAME = 'Data streamer';
+export const MICROSERVICE_NAME = "POC RPS";
 
 export const initializeAppDependencies = async () => {
   await registerAllCommonDependenciesAndComponents();
@@ -67,4 +71,3 @@ const main = async () => {
 main().catch((e: Error) => {
   logError(`main`, e);
 });
-
