@@ -21,6 +21,8 @@ if tokens == nil then
   ts = now_ms
 end
 
+-- Refill tokens basado en el tiempo transcurrido desde última actualización
+-- Esto es atómico: cada pod calcula basándose en el tiempo real
 local delta = math.max(0, now_ms - ts) / 1000.0
 tokens = math.min(capacity, tokens + delta * refill_rate)
 
@@ -28,14 +30,21 @@ local allowed = 0
 local wait_ms = 0
 
 if tokens >= need then
+  -- Hay suficientes tokens: consume y actualiza (ATÓMICO)
   tokens = tokens - need
   allowed = 1
+  ts = now_ms  -- Actualiza timestamp cuando consume
 else
+  -- No hay suficientes tokens: calcula tiempo de espera estimado
   local deficit = need - tokens
   wait_ms = math.ceil((deficit / refill_rate) * 1000)
+  -- Actualiza timestamp incluso si no consume para que el próximo cálculo sea preciso
+  -- Esto es importante para múltiples pods: todos ven el tiempo actualizado
+  ts = now_ms
 end
 
-redis.call("HMSET", key, "tokens", tokens, "ts", now_ms)
+-- Actualiza Redis de forma atómica
+redis.call("HMSET", key, "tokens", tokens, "ts", ts)
 redis.call("PEXPIRE", key, 2000) -- TTL corto para evitar basura
 return {allowed, wait_ms}
 `;

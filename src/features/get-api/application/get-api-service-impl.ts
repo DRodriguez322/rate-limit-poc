@@ -80,7 +80,7 @@ export class GetApiServiceImpl implements GetApiServiceContract {
         limitKey,
         tokens: 1, // POC: 1 token por request
         refillRate: 5, // *** 5 RPS ***
-        capacity: 8, // pequeño burst permitido
+        capacity: 20, // pequeño burst permitido
       });
       rpsWaitMs.observe(waited);
       if (waited > 0) rpsThrottled.inc();
