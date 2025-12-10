@@ -3,6 +3,7 @@ import { type Handler, type Response, Router, Request } from "express";
 import expressAsyncHandler from "express-async-handler";
 import { autoInjectable, inject } from "tsyringe";
 import { AppCustomError, logInfo } from "ms_nodejs_common";
+import { EditPassengerError } from "../../../domain/errors/edit-passenger-error";
 import { body, param, validationResult } from "express-validator";
 
 /**
@@ -142,15 +143,12 @@ export class EditPassengerApi {
    *         description: Internal Server Error
    */
   readonly updatePassenger: Handler = expressAsyncHandler(
-    async (
-      req: Request<{ ink_passenger_identifier: string }, any, UpdatePassengerRequest>,
-      res: Response
-    ) => {
+    async (req: Request, res: Response) => {
       try {
         // Validar resultados de express-validator
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-          return res.status(400).json({
+          res.status(400).json({
             error_code: "VALIDATION_ERROR",
             message: "Invalid request format",
             details: errors.array().map((err) => ({
@@ -158,6 +156,7 @@ export class EditPassengerApi {
               message: err.msg,
             })),
           });
+          return;
         }
 
         const { ink_passenger_identifier } = req.params;
@@ -188,16 +187,27 @@ export class EditPassengerApi {
           "EditPassengerApi"
         );
 
-        // Manejar AppCustomError
-        if (error instanceof AppCustomError) {
+        // Manejar EditPassengerError (tiene errorCode)
+        if (error instanceof EditPassengerError) {
           const statusCode = error.statusCode || 500;
-          return res.status(statusCode).json({
+          res.status(statusCode).json({
             error_code: error.errorCode || "INTERNAL_ERROR",
             message: error.message,
             ...(error.errorCode === "PASSENGER_NOT_FOUND" && {
               ink_passenger_identifier: req.params.ink_passenger_identifier,
             }),
           });
+          return;
+        }
+
+        // Manejar AppCustomError (sin errorCode)
+        if (error instanceof AppCustomError) {
+          const statusCode = error.statusCode || 500;
+          res.status(statusCode).json({
+            error_code: "INTERNAL_ERROR",
+            message: error.message,
+          });
+          return;
         }
 
         // Error genérico
@@ -209,4 +219,3 @@ export class EditPassengerApi {
     }
   );
 }
-

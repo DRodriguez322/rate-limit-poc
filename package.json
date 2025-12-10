@@ -14,7 +14,7 @@
     "prisma:generate": "prisma generate",
     "migrate:dev": "prisma migrate dev",
     "test:debug": "node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand --no-cache",
-    "c": "yarn remove ms_nodejs_common && yarn cache clean ms_nodejs_common && yarn add github:inkaviation/ms_nodejs_common#1.3.2",
+    "c": "yarn remove ms_nodejs_common && yarn cache clean ms_nodejs_common && yarn add github:inkaviation/ms_nodejs_common#1.3.5",
     "docs": "typedoc",
     "test": "jest",
     "coverage": "jest --collect-coverage"

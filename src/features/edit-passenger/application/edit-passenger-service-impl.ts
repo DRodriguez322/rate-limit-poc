@@ -13,6 +13,7 @@ import {
 import { CarrierServiceContract } from "../../../common/carrier/domain/contracts/carrier-service";
 import { FareCodeServiceContract } from "../../../common/fare-code/domain/contracts/fare-code-service";
 import { AppCustomError, logInfo } from "ms_nodejs_common";
+import { EditPassengerError } from "../domain/errors/edit-passenger-error";
 
 /**
  * Códigos de error específicos para edición de pasajeros
@@ -45,9 +46,7 @@ const MIN_NAME_LENGTH = 1;
  * - Uso de servicios comunes
  */
 @injectable()
-export class EditPassengerServiceImpl
-  implements EditPassengerServiceContract
-{
+export class EditPassengerServiceImpl implements EditPassengerServiceContract {
   constructor(
     @inject(PassengerServiceContract.name)
     private readonly passengerService: PassengerServiceContract,
@@ -75,8 +74,9 @@ export class EditPassengerServiceImpl
     try {
       // Validación temprana: al menos un campo debe estar presente
       if (!updateData.fareCode && !updateData.passengerNameIata) {
-        throw new AppCustomError({
-          message: "At least one field (fare_code or passenger_name_iata) must be provided",
+        throw new EditPassengerError({
+          message:
+            "At least one field (fare_code or passenger_name_iata) must be provided",
           statusCode: 400,
           errorCode: EditPassengerErrorCode.EMPTY_REQUEST,
         });
@@ -88,7 +88,7 @@ export class EditPassengerServiceImpl
       );
 
       if (!passenger) {
-        throw new AppCustomError({
+        throw new EditPassengerError({
           message: `Passenger with identifier ${inkPassengerIdentifier} does not exist`,
           statusCode: 404,
           errorCode: EditPassengerErrorCode.PASSENGER_NOT_FOUND,
@@ -96,12 +96,10 @@ export class EditPassengerServiceImpl
       }
 
       // 2. Validar asociación con vuelo
-      const flight = await this.passengerService.getFlightForPassenger(
-        passenger
-      );
+      const flight = passenger.flight;
 
       if (!flight) {
-        throw new AppCustomError({
+        throw new EditPassengerError({
           message: "Passenger has no flight association",
           statusCode: 409,
           errorCode: EditPassengerErrorCode.NO_ASSOCIATION,
@@ -110,8 +108,9 @@ export class EditPassengerServiceImpl
 
       // Validar que el vuelo está habilitado para web services
       if (flight.isEnabledForWs === false) {
-        throw new AppCustomError({
-          message: "Cannot update passenger on flight that is not enabled for web services",
+        throw new EditPassengerError({
+          message:
+            "Cannot update passenger on flight that is not enabled for web services",
           statusCode: 409,
           errorCode: EditPassengerErrorCode.FLIGHT_CLOSED,
         });
@@ -136,10 +135,12 @@ export class EditPassengerServiceImpl
         validationResults.fareCode = fareCodeValidation;
 
         if (!fareCodeValidation.isValid) {
-          throw new AppCustomError({
+          throw new EditPassengerError({
             message: fareCodeValidation.errorMessage || "Invalid fare_code",
             statusCode: 400,
-            errorCode: fareCodeValidation.errorCode || EditPassengerErrorCode.FARE_CODE_INVALID,
+            errorCode:
+              fareCodeValidation.errorCode ||
+              EditPassengerErrorCode.FARE_CODE_INVALID,
           });
         }
 
@@ -148,9 +149,10 @@ export class EditPassengerServiceImpl
           updateData.fareCode
         );
 
-        const carrierKey = await this.passengerService.getCarrierKey(passenger);
+        // Obtener carrierKey del pasajero o del vuelo asociado
+        const carrierKey = passenger.carrierKey || flight.carrierKey;
         if (!carrierKey) {
-          throw new AppCustomError({
+          throw new EditPassengerError({
             message: "Carrier not found for passenger",
             statusCode: 404,
             errorCode: EditPassengerErrorCode.CARRIER_NOT_FOUND,
@@ -164,7 +166,7 @@ export class EditPassengerServiceImpl
           );
 
         if (!carrierClassKey) {
-          throw new AppCustomError({
+          throw new EditPassengerError({
             message: `Carrier class not found for fare_code ${updateData.fareCode} and carrier ${carrierKey}`,
             statusCode: 404,
             errorCode: EditPassengerErrorCode.CARRIER_CLASS_NOT_FOUND,
@@ -183,8 +185,10 @@ export class EditPassengerServiceImpl
         validationResults.passengerNameIata = nameValidation;
 
         if (!nameValidation.isValid) {
-          throw new AppCustomError({
-            message: nameValidation.errorMessage || "Invalid passenger_name_iata format",
+          throw new EditPassengerError({
+            message:
+              nameValidation.errorMessage ||
+              "Invalid passenger_name_iata format",
             statusCode: 400,
             errorCode:
               nameValidation.errorCode ||
@@ -226,17 +230,14 @@ export class EditPassengerServiceImpl
       );
 
       if (!updated) {
-        throw new AppCustomError({
+        throw new EditPassengerError({
           message: "Failed to update passenger",
           statusCode: 500,
         });
       }
 
       // 5. Crear registro de auditoría
-      await this.repository.createAuditLog(
-        passenger.passengerKey,
-        updateData
-      );
+      await this.repository.createAuditLog(passenger.passengerKey, updateData);
 
       // Retornar resultado
       const result: UpdatedPassenger = {
@@ -264,13 +265,18 @@ export class EditPassengerServiceImpl
         "EditPassengerService"
       );
 
-      // Re-lanzar AppCustomError tal cual
+      // Re-lanzar EditPassengerError tal cual
+      if (error instanceof EditPassengerError) {
+        throw error;
+      }
+
+      // Re-lanzar AppCustomError tal cual (por si viene de otra parte)
       if (error instanceof AppCustomError) {
         throw error;
       }
 
       // Convertir otros errores
-      throw new AppCustomError({
+      throw new EditPassengerError({
         message: `Error updating passenger: ${error.message}`,
         error: error as Error,
         statusCode: error.statusCode || 500,
@@ -311,7 +317,7 @@ export class EditPassengerServiceImpl
     }
 
     // Validar que tiene clase carrier asociada
-    const carrierKey = await this.passengerService.getCarrierKey(passenger);
+    const carrierKey = passenger.carrierKey || flight?.carrierKey;
     if (!carrierKey) {
       return {
         isValid: false,
@@ -367,10 +373,7 @@ export class EditPassengerServiceImpl
     const firstPart = parts[1].trim();
 
     // Validar longitud de surname
-    if (
-      surname.length < MIN_NAME_LENGTH ||
-      surname.length > MAX_NAME_LENGTH
-    ) {
+    if (surname.length < MIN_NAME_LENGTH || surname.length > MAX_NAME_LENGTH) {
       return {
         isValid: false,
         errorCode: EditPassengerErrorCode.PASSENGER_NAME_LENGTH_INVALID,
@@ -386,7 +389,9 @@ export class EditPassengerServiceImpl
       return {
         isValid: false,
         errorCode: EditPassengerErrorCode.PASSENGER_NAME_LENGTH_INVALID,
-        errorMessage: `First name length must be between ${MIN_NAME_LENGTH} and ${MAX_NAME_LENGTH * 2} characters`,
+        errorMessage: `First name length must be between ${MIN_NAME_LENGTH} and ${
+          MAX_NAME_LENGTH * 2
+        } characters`,
       };
     }
 
@@ -408,9 +413,10 @@ export class EditPassengerServiceImpl
    * Sanitiza el nombre del pasajero
    * Similar a passenger::sanatise_passenger_name() del legacy
    */
-  private sanitizePassengerName(
-    passengerNameIata: string
-  ): { formatted: string; unformatted: string } {
+  private sanitizePassengerName(passengerNameIata: string): {
+    formatted: string;
+    unformatted: string;
+  } {
     const trimmed = passengerNameIata.trim().toUpperCase();
 
     // Remover espacios múltiples
@@ -425,4 +431,3 @@ export class EditPassengerServiceImpl
     return { formatted, unformatted };
   }
 }
-
